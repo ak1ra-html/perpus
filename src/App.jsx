@@ -8,18 +8,12 @@ import ManajemenAnggota from './pages/ManajemenAnggota';
 import Peminjaman from './pages/Peminjaman';
 import Pengembalian from './pages/Pengembalian';
 
-// Fungsi untuk mengecek status login dari localStorage
-const isAuthenticated = () => {
-  return localStorage.getItem('isLoggedIn') === 'true';
-};
-
-// Komponen Pelindung (Mencegah akses langsung ke Dashboard)
+// Komponen Pelindung Rute Admin
 const ProtectedRoute = ({ children }) => {
-  if (!isAuthenticated()) {
-    // Jika belum login, lemparkan ke halaman login
+  const isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  // Jika sudah login, bungkus halaman dengan Layout Admin (Sidebar & Header)
   return <Layout>{children}</Layout>;
 };
 
@@ -27,18 +21,29 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Rute Login (Terbuka untuk umum, tanpa sidebar) */}
+        {/* Rute Halaman Login */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Rute Utama (Dialihkan otomatis ke /login jika belum masuk, atau ke Dashboard jika sudah) */}
         <Route 
-          path="/login" 
-          element={isAuthenticated() ? <Navigate to="/" replace /> : <Login />} 
+          path="/" 
+          element={
+            localStorage.getItem('isLoggedIn') === 'true' ? (
+              <ProtectedRoute><Dashboard /></ProtectedRoute>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } 
         />
 
-        {/* Rute-rute di bawah ini DILINDUNGI (Wajib Login) */}
-        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        {/* Rute Halaman Admin Lainnya */}
         <Route path="/buku" element={<ProtectedRoute><ManajemenBuku /></ProtectedRoute>} />
         <Route path="/anggota" element={<ProtectedRoute><ManajemenAnggota /></ProtectedRoute>} />
         <Route path="/peminjaman" element={<ProtectedRoute><Peminjaman /></ProtectedRoute>} />
         <Route path="/pengembalian" element={<ProtectedRoute><Pengembalian /></ProtectedRoute>} />
+
+        {/* Jika rute tidak ditemukan, kembalikan ke halaman utama/login */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
