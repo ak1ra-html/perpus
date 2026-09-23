@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiBookOpen, FiLock, FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
 import { supabase } from '../supabaseClient';
+import { FiBook, FiLock, FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -15,7 +15,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Pengecekan data ke tabel users di Supabase
+      // Validasi data ke tabel users di Supabase
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -24,67 +24,86 @@ const Login = () => {
         .single();
 
       if (error || !data) {
-        throw new Error("Username atau password salah!");
+        alert('Gagal masuk: Username atau password salah!');
+      } else {
+        // Simpan status login ke browser
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('user', JSON.stringify(data));
+        
+        // Arahkan ke dashboard utama
+        navigate('/');
       }
-
-      alert("Login berhasil! Selamat datang, " + (data.nama_user || 'Admin'));
-      navigate('/');
-    } catch (error) {
-      alert("Gagal masuk: " + error.message);
+    } catch (err) {
+      console.error('Terjadi kesalahan:', err);
+      alert('Terjadi kesalahan koneksi ke server.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-900 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden p-8 space-y-6">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        {/* Header Form */}
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 bg-blue-50 text-blue-600 rounded-full text-3xl mb-1">
-            <FiBookOpen />
+          <div className="inline-flex p-3 bg-blue-600 rounded-2xl text-white text-3xl shadow-md">
+            <FiBook />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">PerpusKita</h1>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">PerpusKita</h2>
           <p className="text-sm text-gray-500">Silakan masuk menggunakan akun admin Anda</p>
         </div>
 
+        {/* Form Login */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
+              Username
+            </label>
             <div className="relative">
-              <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" required
-                value={username} onChange={(e) => setUsername(e.target.value)}
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                <FiUser />
+              </span>
+              <input
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 placeholder="Masukkan username"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
+              Password
+            </label>
             <div className="relative">
-              <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input 
-                type={showPassword ? "text" : "password"} required
-                value={password} onChange={(e) => setPassword(e.target.value)}
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                <FiLock />
+              </span>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Masukkan password"
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm"
+                className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
               />
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
               >
-                {showPassword ? <FiEyeOff className="text-lg" /> : <FiEye className="text-lg" />}
+                {showPassword ? <FiEyeOff /> : <FiEye />}
               </button>
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm disabled:bg-blue-400 cursor-pointer"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
           >
             {loading ? 'Memproses...' : 'Masuk Sistem'}
           </button>

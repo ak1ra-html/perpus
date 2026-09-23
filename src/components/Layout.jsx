@@ -17,7 +17,9 @@ const Layout = ({ children }) => {
   const location = useLocation();
 
   const handleLogout = () => {
-    // Tambahkan aksi pembersihan session/auth jika ada, lalu arahkan ke login
+    // Hapus status sesi login dari memori browser
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('user');
     navigate('/login');
   };
 
@@ -54,7 +56,7 @@ const Layout = ({ children }) => {
           </div>
           <button 
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden text-gray-400 hover:text-white focus:outline-none"
+            className="md:hidden text-gray-400 hover:text-white focus:outline-none cursor-pointer"
           >
             <FiX className="text-xl" />
           </button>
