@@ -15,7 +15,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Validasi data ke tabel users di Supabase
+      // Mengambil data dari tabel users di Supabase
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -26,7 +26,7 @@ const Login = () => {
       if (error || !data) {
         alert('Gagal masuk: Username atau password salah!');
       } else {
-        // Simpan status login ke browser
+        // Simpan status sesi ke browser
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('user', JSON.stringify(data));
         
@@ -93,7 +93,7 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
               >
                 {showPassword ? <FiEyeOff /> : <FiEye />}
               </button>
