@@ -15,7 +15,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Mengambil data dari tabel users di Supabase
+      console.log("Mencoba login dengan username:", username);
+      
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -23,18 +24,21 @@ const Login = () => {
         .eq('password', password)
         .single();
 
-      if (error || !data) {
+      if (error) {
+        console.error("Error dari Supabase:", error);
+        alert('Gagal masuk: ' + error.message);
+        return;
+      }
+
+      if (!data) {
         alert('Gagal masuk: Username atau password salah!');
       } else {
-        // Simpan status sesi ke browser
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('user', JSON.stringify(data));
-        
-        // Arahkan ke dashboard utama
         navigate('/');
       }
     } catch (err) {
-      console.error('Terjadi kesalahan:', err);
+      console.error('Terjadi kesalahan sistem:', err);
       alert('Terjadi kesalahan koneksi ke server.');
     } finally {
       setLoading(false);
