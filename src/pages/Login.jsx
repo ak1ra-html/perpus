@@ -15,32 +15,40 @@ const Login = () => {
     setLoading(true);
 
     try {
-      console.log("Mencoba login dengan username:", username);
-      
+      console.log("Mengirim permintaan login ke Supabase...");
+
+      // Mengambil data pengguna berdasarkan username dan password
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('username', username)
-        .eq('password', password)
-        .single();
+        .eq('username', username.trim())
+        .eq('password', password);
+
+      console.log("Hasil respons Supabase:", { data, error });
 
       if (error) {
-        console.error("Error dari Supabase:", error);
-        alert('Gagal masuk: ' + error.message);
+        alert('Gagal dari database: ' + error.message);
+        setLoading(false);
         return;
       }
 
-      if (!data) {
-        alert('Gagal masuk: Username atau password salah!');
-      } else {
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('user', JSON.stringify(data));
-        navigate('/');
+      if (!data || data.length === 0) {
+        alert('Username atau password salah!');
+        setLoading(false);
+        return;
       }
+
+      // Jika login berhasil
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('user', JSON.stringify(data[0]));
+      
+      console.log("Login sukses, mengalihkan ke dashboard...");
+      navigate('/');
+      window.location.reload(); // Memuat ulang untuk memastikan state router sinkron
+
     } catch (err) {
-      console.error('Terjadi kesalahan sistem:', err);
-      alert('Terjadi kesalahan koneksi ke server.');
-    } finally {
+      console.error('Kesalahan sistem:', err);
+      alert('Terjadi kesalahan koneksi.');
       setLoading(false);
     }
   };
@@ -48,7 +56,6 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-6">
-        {/* Header Form */}
         <div className="text-center space-y-2">
           <div className="inline-flex p-3 bg-blue-600 rounded-2xl text-white text-3xl shadow-md">
             <FiBook />
@@ -57,7 +64,6 @@ const Login = () => {
           <p className="text-sm text-gray-500">Silakan masuk menggunakan akun admin Anda</p>
         </div>
 
-        {/* Form Login */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">
