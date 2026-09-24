@@ -12,7 +12,7 @@ const ManajemenAnggota = () => {
   
   const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({
-    nama: '',
+    nama_anggota: '',
     nim: '',
     jenis_kelamin: 'Laki-laki',
     status: 'Aktif',
@@ -50,7 +50,7 @@ const ManajemenAnggota = () => {
   const openModalForAdd = () => {
     setEditId(null);
     setFormData({ 
-      nama: '', 
+      nama_anggota: '', 
       nim: '', 
       jenis_kelamin: 'Laki-laki', 
       status: 'Aktif', 
@@ -64,7 +64,7 @@ const ManajemenAnggota = () => {
   const openModalForEdit = (item) => {
     setEditId(item.id);
     setFormData({
-      nama: item.nama || item.nama_anggota || '',
+      nama_anggota: item.nama_anggota || '',
       nim: item.nim || '',
       jenis_kelamin: item.jenis_kelamin || 'Laki-laki',
       status: item.status || 'Aktif',
@@ -125,7 +125,7 @@ const ManajemenAnggota = () => {
   };
 
   const filteredAnggota = anggota.filter((item) => {
-    const nama = item.nama || item.nama_anggota || '';
+    const nama = item.nama_anggota || '';
     const nim = item.nim || '';
     const email = item.email || '';
     return nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -167,7 +167,7 @@ const ManajemenAnggota = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider border-b border-gray-200">
-                <th className="p-4 font-semibold w-16 text-center">ID</th>
+                <th className="p-4 font-semibold w-16 text-center">No</th>
                 <th className="p-4 font-semibold">Nama</th>
                 <th className="p-4 font-semibold">NIM / ID</th>
                 <th className="p-4 font-semibold">Kontak</th>
@@ -187,9 +187,9 @@ const ManajemenAnggota = () => {
                 </tr>
               ) : (
                 filteredAnggota.map((item, index) => (
-                  <tr key={item.id || index} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4 text-center text-gray-500 font-semibold">#{item.id}</td>
-                    <td className="p-4 font-medium text-gray-900">{item.nama || item.nama_anggota || '-'}</td>
+                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-4 text-center text-gray-500 font-semibold">#{index + 1}</td>
+                    <td className="p-4 font-medium text-gray-900">{item.nama_anggota || '-'}</td>
                     <td className="p-4 text-gray-600">{item.nim || '-'}</td>
                     <td className="p-4">
                       <div className="text-gray-900">{item.email || '-'}</div>
@@ -237,8 +237,8 @@ const ManajemenAnggota = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
                 <input 
-                  type="text" name="nama" required
-                  value={formData.nama} onChange={handleInputChange}
+                  type="text" name="nama_anggota" required
+                  value={formData.nama_anggota} onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="Masukkan nama lengkap..."
                 />

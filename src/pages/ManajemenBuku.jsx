@@ -177,7 +177,7 @@ const ManajemenBuku = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider border-b border-gray-200">
-                <th className="p-4 font-semibold w-16 text-center">ID</th>
+                <th className="p-4 font-semibold w-16 text-center">No</th>
                 <th className="p-4 font-semibold">Judul Buku</th>
                 <th className="p-4 font-semibold">Penulis & Penerbit</th>
                 <th className="p-4 font-semibold">Kategori</th>
@@ -197,7 +197,7 @@ const ManajemenBuku = () => {
               ) : (
                 filteredBuku.map((item, index) => (
                   <tr key={item.id || index} className="hover:bg-gray-50 transition-colors">
-                    <td className="p-4 text-center text-gray-500 font-semibold">#{item.id}</td>
+                    <td className="p-4 text-center text-gray-500 font-semibold">#{index + 1}</td>
                     <td className="p-4 font-medium text-gray-900">{item.judul_buku || '-'}</td>
                     <td className="p-4">
                       <div className="text-gray-900">{item.penulis || '-'}</div>

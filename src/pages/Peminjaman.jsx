@@ -28,17 +28,31 @@ const Peminjaman = () => {
   const fetchPeminjaman = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      const { data: dataPinjam, error: errPinjam } = await supabase
         .from('peminjaman')
-        .select(`
-          *,
-          buku ( judul_buku ),
-          anggota ( nama, nim )
-        `)
+        .select('*')
         .order('id', { ascending: true });
 
-      if (error) throw error;
-      setPeminjaman(data || []);
+      if (errPinjam) throw errPinjam;
+
+      const { data: dataBuku } = await supabase.from('buku').select('id, judul_buku');
+      // Perubahan ada di sini
+      const { data: dataAnggota } = await supabase.from('anggota').select('id, nama_anggota, nim');
+
+      const bukuMap = {};
+      if (dataBuku) dataBuku.forEach(b => bukuMap[b.id] = b);
+
+      const anggotaMap = {};
+      if (dataAnggota) dataAnggota.forEach(a => anggotaMap[a.id] = a);
+
+      const combinedData = (dataPinjam || []).map(item => ({
+        ...item,
+        buku: bukuMap[item.id_buku] || null,
+        anggota: anggotaMap[item.id_anggota] || null
+      }));
+
+      setPeminjaman(combinedData);
     } catch (error) {
       console.error("Error mengambil data peminjaman:", error.message);
     } finally {
@@ -155,7 +169,8 @@ const Peminjaman = () => {
   const filteredPeminjaman = peminjaman.filter((item) => {
     const search = searchTerm.toLowerCase();
     const idPinjam = String(item.id || '').toLowerCase();
-    const namaAnggota = (item.anggota?.nama || '').toLowerCase();
+    // Perubahan ada di sini
+    const namaAnggota = (item.anggota?.nama_anggota || '').toLowerCase();
     const judulBuku = (item.buku?.judul_buku || '').toLowerCase();
     return idPinjam.includes(search) || namaAnggota.includes(search) || judulBuku.includes(search);
   });
@@ -216,7 +231,8 @@ const Peminjaman = () => {
                 filteredPeminjaman.map((item, index) => (
                   <tr key={item.id || index} className="hover:bg-gray-50 transition-colors">
                     <td className="p-4 text-center text-gray-500 font-semibold">#{item.id}</td>
-                    <td className="p-4 font-medium text-gray-900">{item.anggota?.nama || `Anggota ID: ${item.id_anggota}`}</td>
+                    {/* Perubahan ada di sini */}
+                    <td className="p-4 font-medium text-gray-900">{item.anggota?.nama_anggota || `Anggota ID: ${item.id_anggota}`}</td>
                     <td className="p-4 text-gray-800">{item.buku?.judul_buku || `Buku ID: ${item.id_buku}`}</td>
                     <td className="p-4 text-gray-600">{item.tanggal_pinjam || '-'}</td>
                     <td className="p-4 text-gray-600">{item.tanggal_kembali || '-'}</td>
@@ -266,7 +282,8 @@ const Peminjaman = () => {
                   <option value="">-- Pilih Nama Anggota --</option>
                   {listAnggota.map((ang) => (
                     <option key={ang.id} value={ang.id}>
-                      {ang.nama} ({ang.nim})
+                      {/* Perubahan ada di sini */}
+                      {ang.nama_anggota} ({ang.nim})
                     </option>
                   ))}
                 </select>

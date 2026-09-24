@@ -24,16 +24,26 @@ const Pengembalian = () => {
 
       const { data: dataPeminjaman } = await supabase
         .from('peminjaman')
-        .select(`
-          id,
-          buku ( judul_buku ),
-          anggota ( nama, nim )
-        `);
+        .select('*');
+
+      const { data: dataBuku } = await supabase.from('buku').select('id, judul_buku');
+      // Perubahan ada di sini: memanggil nama_anggota
+      const { data: dataAnggota } = await supabase.from('anggota').select('id, nama_anggota, nim');
+
+      const bukuMap = {};
+      if (dataBuku) dataBuku.forEach(b => bukuMap[b.id] = b);
+
+      const anggotaMap = {};
+      if (dataAnggota) dataAnggota.forEach(a => anggotaMap[a.id] = a);
 
       const peminjamanMap = {};
       if (dataPeminjaman) {
         dataPeminjaman.forEach(p => {
-          peminjamanMap[p.id] = p;
+          peminjamanMap[p.id] = {
+            ...p,
+            buku: bukuMap[p.id_buku] || null,
+            anggota: anggotaMap[p.id_anggota] || null
+          };
         });
       }
 
@@ -54,7 +64,8 @@ const Pengembalian = () => {
     const search = searchTerm.toLowerCase();
     const idKembali = String(item.id || '').toLowerCase();
     const idPeminjaman = String(item.id_peminjaman || '').toLowerCase();
-    const namaAnggota = (item.peminjaman?.anggota?.nama || '').toLowerCase();
+    // Perubahan ada di sini: membaca nama_anggota
+    const namaAnggota = (item.peminjaman?.anggota?.nama_anggota || '').toLowerCase();
     const judulBuku = (item.peminjaman?.buku?.judul_buku || '').toLowerCase();
     return idKembali.includes(search) || idPeminjaman.includes(search) || namaAnggota.includes(search) || judulBuku.includes(search);
   });
@@ -110,7 +121,8 @@ const Pengembalian = () => {
                     <tr key={item.id || index} className="hover:bg-gray-50 transition-colors">
                       <td className="p-4 text-center text-gray-500 font-semibold">#{item.id}</td>
                       <td className="p-4 font-medium text-gray-900">
-                        {item.peminjaman?.anggota?.nama || `Peminjaman ID: #${item.id_peminjaman}`}
+                        {/* Perubahan ada di sini: membaca nama_anggota untuk tabel */}
+                        {item.peminjaman?.anggota?.nama_anggota || `Peminjaman ID: #${item.id_peminjaman}`}
                       </td>
                       <td className="p-4 text-gray-800">
                         {item.peminjaman?.buku?.judul_buku || '-'}
@@ -124,7 +136,7 @@ const Pengembalian = () => {
                         </span>
                       </td>
                       <td className="p-4 text-center font-medium text-gray-800">
-                        {item.denda > 0 ? `Rp ${item.denda.toLocaleString()}` : 'Rp 0'}
+                        {item.denda > 0 ? `Rp ${item.denda.toLocaleString('id-ID')}` : 'Rp 0'}
                       </td>
                     </tr>
                   );
