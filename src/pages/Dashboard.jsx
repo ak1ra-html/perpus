@@ -11,15 +11,13 @@ const Dashboard = () => {
     terlambat: 0
   });
 
-  // 1. Data grafik sekarang menggunakan State, bukan data mati (dummy)
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
-    fetchChartData(); // Tarik data grafik saat halaman dimuat
+    fetchChartData(); 
 
-    // 2. Realtime Listener: Mendengarkan perubahan tabel secara instan
     const booksChannel = supabase.channel('custom-buku-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'buku' }, () => fetchStats())
       .subscribe();
@@ -31,14 +29,14 @@ const Dashboard = () => {
     const peminjamanChannel = supabase.channel('custom-peminjaman-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'peminjaman' }, () => {
         fetchStats();
-        fetchChartData(); // Update grafik jika ada transaksi baru
+        fetchChartData(); 
       })
       .subscribe();
 
     const pengembalianChannel = supabase.channel('custom-pengembalian-channel')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pengembalian' }, () => {
         fetchStats();
-        fetchChartData(); // Update grafik jika ada buku dikembalikan
+        fetchChartData(); 
       })
       .subscribe();
 
@@ -55,21 +53,38 @@ const Dashboard = () => {
       const { count: countBuku } = await supabase.from('buku').select('*', { count: 'exact', head: true });
       const { count: countAnggota } = await supabase.from('anggota').select('*', { count: 'exact', head: true });
       
-      const { count: countPeminjaman } = await supabase
+      // Ambil seluruh data peminjaman yang belum selesai beserta tanggal kembalinya
+      const { data: dataPeminjaman } = await supabase
         .from('peminjaman')
-        .select('*', { count: 'exact', head: true })
+        .select('id, tanggal_kembali')
         .neq('status', 'Selesai');
       
-      const { count: countTerlambat } = await supabase
-        .from('peminjaman')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'Terlambat');
+      const jumlahDipinjam = dataPeminjaman ? dataPeminjaman.length : 0;
+      
+      // Hitung manual mana yang sudah lewat tanggal tenggat
+      let jumlahTerlambat = 0;
+      if (dataPeminjaman) {
+        // Ambil tanggal hari ini saja tanpa jam, dengan menyesuaikan format WIB (GMT+7)
+        const todayRaw = new Date();
+        const todayStr = new Date(todayRaw.getTime() - (todayRaw.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        const todayDate = new Date(todayStr);
+
+        dataPeminjaman.forEach(item => {
+          if (item.tanggal_kembali) {
+            const dueDate = new Date(item.tanggal_kembali);
+            // Jika hari ini lebih besar dari tenggat waktu, maka terlambat
+            if (todayDate > dueDate) {
+              jumlahTerlambat++;
+            }
+          }
+        });
+      }
       
       setStats({
         totalBuku: countBuku || 0,
         totalAnggota: countAnggota || 0,
-        bukuDipinjam: countPeminjaman || 0,
-        terlambat: countTerlambat || 0
+        bukuDipinjam: jumlahDipinjam,
+        terlambat: jumlahTerlambat
       });
     } catch (error) {
       console.error("Gagal mengambil data statistik:", error.message);
@@ -78,28 +93,23 @@ const Dashboard = () => {
     }
   };
 
-  // 3. Fungsi Logika untuk Menghitung Grafik Bulanan Asli
   const fetchChartData = async () => {
     try {
-      // Tarik semua tanggal peminjaman dan pengembalian
       const { data: dataPinjam } = await supabase.from('peminjaman').select('tanggal_pinjam');
       const { data: dataKembali } = await supabase.from('pengembalian').select('tanggal_dikembalikan');
 
-      // Siapkan kerangka 12 bulan (Januari - Desember)
       const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
       let groupedData = months.map(m => ({ name: m, peminjaman: 0, pengembalian: 0 }));
 
-      // Kelompokkan data peminjaman berdasarkan bulan
       if (dataPinjam) {
         dataPinjam.forEach(item => {
           if (item.tanggal_pinjam) {
-            const monthIndex = new Date(item.tanggal_pinjam).getMonth(); // Dapatkan indeks bulan (0-11)
+            const monthIndex = new Date(item.tanggal_pinjam).getMonth(); 
             groupedData[monthIndex].peminjaman += 1;
           }
         });
       }
 
-      // Kelompokkan data pengembalian berdasarkan bulan
       if (dataKembali) {
         dataKembali.forEach(item => {
           if (item.tanggal_dikembalikan) {
@@ -109,7 +119,6 @@ const Dashboard = () => {
         });
       }
 
-      // Simpan hasil hitungan ke state grafik
       setChartData(groupedData);
     } catch (error) {
       console.error("Gagal mengambil data grafik:", error.message);
@@ -139,7 +148,7 @@ const Dashboard = () => {
             </div>
             <div className="text-right">
               <p className="text-white/90 font-medium text-sm">{card.title}</p>
-              <h3 className="text-4xl font-bold mt-1">{card.value.toLocaleString()}</h3>
+              <h3 className="text-4xl font-bold mt-1">{card.value.toLocaleString('id-ID')}</h3>
             </div>
           </div>
         ))}
